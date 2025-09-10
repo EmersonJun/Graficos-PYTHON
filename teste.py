@@ -388,6 +388,9 @@ for idx, col in enumerate(colunas_existentes):
     plt.grid(True, alpha=0.3)
 
 plt.tight_layout()
+plt.tight_layout(rect=[0, 0, 1, 0.96])
+plt.subplots_adjust(hspace=0.4, wspace=0.3)
+
 plt.show()
 
 # === 5) GRÁFICOS DE CORRELAÇÃO E ANÁLISE COMPARATIVA ===
@@ -512,7 +515,10 @@ if len(colunas_existentes) >= 2:
     ax4.set_xlim(-3.5, 3.5)
     
     plt.tight_layout()
-    plt.show()
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+plt.subplots_adjust(hspace=0.4, wspace=0.3)
+plt.show()
+
 
 # === 6) TABELA RESUMO FINAL ===
 print(f"\n{'='*90}")
