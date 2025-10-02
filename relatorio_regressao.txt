@@ -1,0 +1,27 @@
+RELATÓRIO - ANÁLISE E MODELOS
+============================================================
+Registros: 599007
+
+== Estatísticas descritivas ==
+
+Ano Modelo - n=599007, média=2008.752, mediana=2010.000, dp=9.188, assimetria=-0.393
+Tamanho do motor - n=599007, média=2.267, mediana=2.000, dp=1.032, assimetria=1.525
+Preço médio brl - n=599007, média=111580.597, mediana=42989.000, dp=291223.744, assimetria=11.660
+
+== Modelos ajustados ==
+
+Modelo: Linear univariada
+  R2: 0.11961949814958872
+  RMSE: 273250.91555369925
+
+
+Modelo: Polinomial grau 2
+  R2: 0.13018341964304125
+  RMSE: 271606.5624390062
+
+
+Modelo: Exponencial
+  R2: 0.1354474122320134
+  RMSE: 270783.4552075672
+
+

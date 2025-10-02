@@ -15,3 +15,6 @@ interativos com plotly e monta um dashboard com streamlit.
 NOTA: o Streamlit espera que o arquivo contenha chamadas da API do Streamlit ao rodar com
 `streamlit run`. Para gerar um relatório estático, use a flag --report.
 """
+
+python dashboard_regressao.py --report
+
