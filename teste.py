@@ -622,3 +622,6 @@ print(f"🔬 Análises realizadas: Normalidade, Correlações, Covariâncias")
 print(f"📊 Total de registros processados: {len(df_limpo)}")
 print(f"\n💡 BIBLIOTECAS USADAS: pandas, matplotlib, numpy (nativas do Python)")
 print(f"{'='*80}")
+
+
+
