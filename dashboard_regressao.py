@@ -108,7 +108,12 @@ def gerar_relatorio_texto(df, colunas, resultados_stats, modelos_resumo):
     print("== Estatísticas descritivas ==\n", file=buf)
     for col in colunas:
         r = resultados_stats[col]
-        print(f"{col} - n={r['n']}, média={r['media']:.3f}, mediana={r['mediana']:.3f}, dp={r['desvio_padrao']:.3f}, assimetria={r['assimetria']:.3f}", file=buf)
+        print(
+            f"{col} - n={r['n']}, média={r['media']:.3f}, mediana={r['mediana']:.3f}, "
+            f"moda={r['moda']:.3f}, variância={r['variancia']:.3f}, dp={r['desvio_padrao']:.3f}, "
+            f"assimetria={r['assimetria']:.3f}, curtose={r['curtose']:.3f}, min={r['min']:.3f}, max={r['max']:.3f}",
+            file=buf
+        )
     print("\n== Modelos ajustados ==\n", file=buf)
     for nome, info in modelos_resumo.items():
         print(f"Modelo: {nome}", file=buf)
@@ -116,6 +121,13 @@ def gerar_relatorio_texto(df, colunas, resultados_stats, modelos_resumo):
             if isinstance(v, (int, float, str)):
                 print(f"  {k}: {v}", file=buf)
         print("\n", file=buf)
+
+    print("== Matriz de Covariância ==\n", file=buf)
+    print(df[colunas].cov(), file=buf)
+
+    print("\n== Matriz de Correlação ==\n", file=buf)
+    print(df[colunas].corr(), file=buf)
+
     return buf.getvalue()
 
 # ---------------------------- DASHBOARD STREAMLIT ----------------------------
@@ -134,7 +146,7 @@ def streamlit_app(df, colunas):
     tab1, tab2, tab3, tab4 = st.tabs([
         "📊 Estatísticas Descritivas",
         "📈 Gráficos por Variável",
-        "🔗 Correlações & Comparações",
+        "🔗 Correlações & Modelos",
         "📋 Resumo Final"
     ])
 
@@ -203,7 +215,7 @@ def streamlit_app(df, colunas):
             st.write(f"Intercepto: {model_mv.intercept_:.3f}")
             st.write(f"R²: {r2_mv:.3f} | RMSE: {rmse_mv:.3f}")
 
-        # TAB 4
+    # TAB 4
     with tab4:
         st.subheader("Resumo Final e Exportação")
 
@@ -236,61 +248,17 @@ def streamlit_app(df, colunas):
         st.write("🔗 Matriz de Covariância")
         st.dataframe(df[colunas].cov())
 
+        # Matriz de correlação
+        st.write("🔗 Matriz de Correlação")
+        st.dataframe(df[colunas].corr())
+
         # Relatório completo em texto
         texto = gerar_relatorio_texto(df, colunas, stats, modelos_resumo)
         st.subheader("📑 Prévia do Relatório")
         st.text(texto)
 
         # Exportação
-        if st.button("Exportar relatório .txt"):
-            st.download_button("Download relatório", texto, file_name="relatorio_regressao.txt")
-
-# ---------------------------- CLI ----------------------------
-
-def gerar_report_cli(df, colunas):
-    xcol = colunas[1] if len(colunas) > 1 else colunas[0]
-    ycol = colunas[-1]
-    x = df[xcol].values
-    y = df[ycol].values
-
-    model_lin, y_pred_lin, r2_lin, rmse_lin = ajusta_regressao_linear_simples(x, y)
-    model_poly, y_pred_poly, r2_poly, rmse_poly = ajusta_regressao_polinomial(x, y, grau=2)
-    popt_exp, y_pred_exp, r2_exp, rmse_exp = (None, None, None, None)
-    if np.all(y > 0):
-        popt_exp, y_pred_exp, r2_exp, rmse_exp = ajusta_exponencial(x, y)
-
-    modelos_resumo = {
-        'Linear univariada': {'R2': r2_lin, 'RMSE': rmse_lin},
-        'Polinomial grau 2': {'R2': r2_poly, 'RMSE': rmse_poly}
-    }
-    if r2_exp is not None:
-        modelos_resumo['Exponencial'] = {'R2': r2_exp, 'RMSE': rmse_exp}
-
-    stats = resumo_estatistico(df, colunas)
-    texto = gerar_relatorio_texto(df, colunas, stats, modelos_resumo)
-
-    with open('relatorio_regressao.txt', 'w', encoding='utf-8') as f:
-        f.write(texto)
-    print('Relatório salvo em relatorio_regressao.txt')
-
-    try:
-        import matplotlib.pyplot as plt
-        plt.figure(figsize=(8,6))
-        plt.scatter(x, y, label='Observado')
-        idx_sort = np.argsort(x)
-        plt.plot(x[idx_sort], y_pred_lin[idx_sort], '--', label=f'Linear (R2={r2_lin:.3f})')
-        plt.plot(x[idx_sort], y_pred_poly[idx_sort], '-', label=f'Polinomial (R2={r2_poly:.3f})')
-        if y_pred_exp is not None:
-            plt.plot(x[idx_sort], y_pred_exp[idx_sort], '-.', label=f'Exponencial (R2={r2_exp:.3f})')
-        plt.xlabel(xcol)
-        plt.ylabel(ycol)
-        plt.legend()
-        plt.title('Ajustes - Comparação')
-        plt.grid(True)
-        plt.savefig('ajustes_comparacao.png', dpi=300, bbox_inches='tight')
-        print('Gráfico salvo em ajustes_comparacao.png')
-    except Exception as e:
-        print('Não foi possível salvar o gráfico:', e)
+        st.download_button("📥 Download relatório .txt", texto, file_name="relatorio_regressao.txt")
 
 # ---------------------------- MAIN ----------------------------
 
@@ -303,6 +271,7 @@ def main():
     df, colunas = carregar_dados(args.file)
 
     if args.report:
+        stats = resumo_estatistico(df, colunas)
         gerar_report_cli(df, colunas)
     else:
         streamlit_app(df, colunas)
