@@ -143,6 +143,31 @@ def streamlit_app(df, colunas):
 
     stats = resumo_estatistico(df, colunas)
 
+    # ==========================
+    # CALCULA MODELOS ANTES DAS ABAS
+    # ==========================
+    r2_lin = rmse_lin = r2_poly = rmse_poly = r2_exp = rmse_exp = r2_mv = rmse_mv = None
+    model_mv = None
+
+    if len(features) >= 1:
+        xcol = features[0]
+        ycol = target
+        x = df[xcol].values
+        y = df[ycol].values
+
+        model_lin, y_pred_lin, r2_lin, rmse_lin = ajusta_regressao_linear_simples(x, y)
+        model_poly, y_pred_poly, r2_poly, rmse_poly = ajusta_regressao_polinomial(x, y, grau=grau_poly)
+        if np.all(y > 0):
+            _, y_pred_exp, r2_exp, rmse_exp = ajusta_exponencial(x, y)
+
+    if len(features) >= 2:
+        X = df[features].values
+        y = df[target].values
+        model_mv, y_pred_mv, r2_mv, rmse_mv = ajusta_regressao_linear_multivariada(X, y)
+
+    # ==========================
+    # ABAS
+    # ==========================
     tab1, tab2, tab3, tab4 = st.tabs([
         "📊 Estatísticas Descritivas",
         "📈 Gráficos por Variável",
@@ -172,27 +197,15 @@ def streamlit_app(df, colunas):
         st.plotly_chart(fig_corr, use_container_width=True)
 
         if len(features) >= 1:
-            xcol = features[0]
-            ycol = target
-            x = df[xcol].values
-            y = df[ycol].values
-
-            model_lin, y_pred_lin, r2_lin, rmse_lin = ajusta_regressao_linear_simples(x, y)
-            model_poly, y_pred_poly, r2_poly, rmse_poly = ajusta_regressao_polinomial(x, y, grau=grau_poly)
-            if np.all(y > 0):
-                _, y_pred_exp, r2_exp, rmse_exp = ajusta_exponencial(x, y)
-            else:
-                r2_exp, rmse_exp, y_pred_exp = (None, None, None)
-
             df_plot = pd.DataFrame({xcol: x, ycol: y, 'lin_pred': y_pred_lin, 'poly_pred': y_pred_poly})
-            if y_pred_exp is not None:
+            if r2_exp is not None:
                 df_plot['exp_pred'] = y_pred_exp
 
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=df_plot[xcol], y=df_plot[ycol], mode='markers', name='Observado'))
             fig.add_trace(go.Scatter(x=df_plot[xcol], y=df_plot['lin_pred'], mode='lines', name=f'Linear (R²={r2_lin:.3f})'))
             fig.add_trace(go.Scatter(x=df_plot[xcol], y=df_plot['poly_pred'], mode='lines', name=f'Polinomial {grau_poly} (R²={r2_poly:.3f})'))
-            if 'exp_pred' in df_plot:
+            if r2_exp is not None:
                 fig.add_trace(go.Scatter(x=df_plot[xcol], y=df_plot['exp_pred'], mode='lines', name=f'Exponencial (R²={r2_exp:.3f})'))
 
             fig.update_layout(title=f"Ajustes de Regressão: {ycol} vs {xcol}", xaxis_title=xcol, yaxis_title=ycol)
@@ -206,10 +219,7 @@ def streamlit_app(df, colunas):
             })
             st.table(met_df)
 
-        if len(features) >= 2:
-            X = df[features].values
-            y = df[target].values
-            model_mv, y_pred_mv, r2_mv, rmse_mv = ajusta_regressao_linear_multivariada(X, y)
+        if model_mv is not None:
             st.subheader("Regressão Linear Multivariada")
             st.write(pd.DataFrame({'feature': features, 'coef': model_mv.coef_}))
             st.write(f"Intercepto: {model_mv.intercept_:.3f}")
@@ -219,45 +229,38 @@ def streamlit_app(df, colunas):
     with tab4:
         st.subheader("Resumo Final e Exportação")
 
-        # Estatísticas descritivas
         st.write("📊 Estatísticas Descritivas")
         st.write(pd.DataFrame.from_dict(stats, orient='index'))
 
-        # Métricas dos modelos
-        st.write("📈 Métricas dos Modelos")
         modelos_resumo = {}
-        if 'r2_lin' in locals():
+        if r2_lin is not None:
             modelos_resumo['Linear Univariada'] = {'R2': r2_lin, 'RMSE': rmse_lin}
-        if 'r2_poly' in locals():
+        if r2_poly is not None:
             modelos_resumo[f'Polinomial grau {grau_poly}'] = {'R2': r2_poly, 'RMSE': rmse_poly}
-        if 'r2_exp' in locals() and r2_exp is not None:
+        if r2_exp is not None:
             modelos_resumo['Exponencial'] = {'R2': r2_exp, 'RMSE': rmse_exp}
-        if 'r2_mv' in locals():
+        if r2_mv is not None:
             modelos_resumo['Multivariada'] = {'R2': r2_mv, 'RMSE': rmse_mv}
 
         if modelos_resumo:
+            st.write("📈 Métricas dos Modelos")
             st.write(pd.DataFrame(modelos_resumo).T)
 
-        # Coeficientes multivariados
-        if 'model_mv' in locals():
+        if model_mv is not None:
             st.write("📌 Coeficientes do Modelo Multivariado")
             st.write(pd.DataFrame({'feature': features, 'coef': model_mv.coef_}))
             st.write(f"Intercepto: {model_mv.intercept_:.3f}")
 
-        # Matriz de covariância
         st.write("🔗 Matriz de Covariância")
         st.dataframe(df[colunas].cov())
 
-        # Matriz de correlação
         st.write("🔗 Matriz de Correlação")
         st.dataframe(df[colunas].corr())
 
-        # Relatório completo em texto
         texto = gerar_relatorio_texto(df, colunas, stats, modelos_resumo)
         st.subheader("📑 Prévia do Relatório")
         st.text(texto)
 
-        # Exportação
         st.download_button("📥 Download relatório .txt", texto, file_name="relatorio_regressao.txt")
 
 # ---------------------------- MAIN ----------------------------
