@@ -177,9 +177,58 @@ def streamlit_app(df, colunas):
 
     # TAB 1
     with tab1:
-        st.subheader("Estatísticas Resumidas")
-        st.write(pd.DataFrame.from_dict(stats, orient='index'))
+        st.subheader("📊 Estatísticas Descritivas e Gráficos")
 
+        # ===== TABELA DE ESTATÍSTICAS =====
+        df_stats = pd.DataFrame.from_dict(stats, orient='index')
+        st.write(df_stats)
+
+        # ===== GRÁFICOS ESTATÍSTICOS =====
+        st.subheader("📈 Gráficos Estatísticos")
+
+        # Gráfico de medidas centrais
+        st.plotly_chart(
+            px.bar(df_stats[['media', 'mediana', 'moda']],
+                   barmode='group',
+                   title="Média, Mediana e Moda por Variável"),
+            use_container_width=True
+        )
+
+        # Gráfico de variância
+        st.plotly_chart(
+            px.bar(df_stats[['variancia']],
+                   title="Variância por Variável"),
+            use_container_width=True
+        )
+
+        # Gráfico de desvio padrão
+        st.plotly_chart(
+            px.bar(df_stats[['desvio_padrao']],
+                   title="Desvio Padrão por Variável"),
+            use_container_width=True
+        )
+
+        # Gráfico de mínimos e máximos
+        st.plotly_chart(
+            px.bar(df_stats[['min', 'max']],
+                   barmode='group',
+                   title="Valores Mínimos e Máximos por Variável"),
+            use_container_width=True
+        )
+
+        # Gráfico de contagem (n)
+        st.plotly_chart(
+            px.bar(df_stats[['n']],
+                   title="Número de Registros (N) por Variável"),
+            use_container_width=True
+        )
+
+        # Matriz de correlação
+        st.subheader("🔗 Matriz de Correlação entre Variáveis")
+        corr = df[colunas].corr()
+        fig_corr = px.imshow(corr, text_auto=True, color_continuous_scale='RdBu_r',
+                             title="Correlação entre Variáveis")
+        st.plotly_chart(fig_corr, use_container_width=True)
     # TAB 2
     with tab2:
         st.subheader("Distribuições e Outliers")
