@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 # === 1) LER A PLANILHA EXISTENTE ===
 # Substitua pelo nome do seu arquivo
-df = pd.read_excel("tabelinha.xlsx")
+df = pd.read_excel("tabelinha2.xlsx")
 
 # Veja como o pandas entendeu os dados
 print(df.head())
@@ -169,7 +169,7 @@ def qq_plot_simples(dados, ax):
 
 # === 1) CARREGAR DADOS ===
 try:
-    df = pd.read_excel("tabelinha.xlsx")
+    df = pd.read_excel("tabelinha2.xlsx")
     print("✅ Arquivo carregado com sucesso!")
     print(f"📊 Dados: {df.shape[0]} linhas, {df.shape[1]} colunas")
     
@@ -194,7 +194,7 @@ try:
 except Exception as e:
     print(f"❌ Erro: {e}")
     print("\n💡 DICAS PARA RESOLVER:")
-    print("1. Verifique se o arquivo 'tabelinha.xlsx' está na mesma pasta")
+    print("1. Verifique se o arquivo 'tabelinha2.xlsx' está na mesma pasta")
     print("2. Instale o openpyxl: pip install openpyxl")
     print("3. Verifique se o arquivo não está aberto em outro programa")
     exit()
