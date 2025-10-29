@@ -261,13 +261,77 @@ def streamlit_app(df, colunas):
     ])
 
     # TAB 1 - Estatísticas
+    # TAB 1 - Estatísticas
     with tab1:
         st.subheader("📊 Estatísticas Descritivas e Gráficos")
         df_stats = pd.DataFrame.from_dict(stats, orient='index')
         st.write(df_stats)
-        st.subheader("📈 Gráficos Estatísticos")
-        st.plotly_chart(px.bar(df_stats[['media', 'mediana', 'moda']].reset_index().rename(columns={'index':'variavel'}).melt(id_vars='variavel', var_name='estat', value_name='valor'),
-                              x='variavel', y='valor', color='estat', barmode='group', title="Média, Mediana e Moda por Variável"), use_container_width=True)
+
+        st.markdown("---")
+        st.subheader("📈 Gráficos Estatísticos Individuais")
+
+        # === Gráfico de Média ===
+        fig_media = px.bar(
+            df_stats.reset_index(),
+            x='index', y='media',
+            title="📊 Média por Variável",
+            color='media', color_continuous_scale='Blues'
+        )
+        st.plotly_chart(fig_media, use_container_width=True)
+
+        # === Gráfico de Mediana ===
+        fig_mediana = px.bar(
+            df_stats.reset_index(),
+            x='index', y='mediana',
+            title="📊 Mediana por Variável",
+            color='mediana', color_continuous_scale='Greens'
+        )
+        st.plotly_chart(fig_mediana, use_container_width=True)
+
+        # === Gráfico de Moda ===
+        fig_moda = px.bar(
+            df_stats.reset_index(),
+            x='index', y='moda',
+            title="📊 Moda por Variável",
+            color='moda', color_continuous_scale='Purples'
+        )
+        st.plotly_chart(fig_moda, use_container_width=True)
+
+        st.markdown("---")
+        st.subheader("📉 Variância e Desvio Padrão")
+
+        # === Gráfico de Variância ===
+        fig_var = px.bar(
+            df_stats.reset_index(),
+            x='index', y='variancia',
+            title="📉 Variância por Variável",
+            color='variancia', color_continuous_scale='Viridis'
+        )
+        st.plotly_chart(fig_var, use_container_width=True)
+
+        # === Gráfico de Desvio Padrão ===
+        fig_std = px.bar(
+            df_stats.reset_index(),
+            x='index', y='desvio_padrao',
+            title="📉 Desvio Padrão por Variável",
+            color='desvio_padrao', color_continuous_scale='Cividis'
+        )
+        st.plotly_chart(fig_std, use_container_width=True)
+
+        st.markdown("---")
+        st.subheader("🧮 Matriz de Covariância")
+
+        cov_matrix = df[colunas].cov().round(3)
+        fig_cov = px.imshow(
+            cov_matrix,
+            text_auto=True,
+            title="🧮 Matriz de Covariância entre Variáveis",
+            color_continuous_scale='RdBu',
+            zmin=-abs(cov_matrix.values).max(),
+            zmax=abs(cov_matrix.values).max()
+        )
+        st.plotly_chart(fig_cov, use_container_width=True)
+
 
     # TAB 2 - Gráficos por Variável
     with tab2:
