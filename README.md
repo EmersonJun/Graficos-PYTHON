@@ -4,6 +4,7 @@ Arquivo: dashboard_regressao.py
 Como usar (no terminal):
   1) Instale dependências: 
      pip install pandas numpy matplotlib scikit-learn statsmodels scipy plotly streamlit openpyxl
+     pip install seaborn
   2) Coloque 'tabelinha.xlsx' na mesma pasta
   3) Execute relatório (opcional): python dashboard_regressao.py --report
   4) Execute o dashboard interativo: streamlit run dashboard_regressao.py
